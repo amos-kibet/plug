@@ -44,7 +44,8 @@ defmodule Plug.Router.Utils do
   Builds the pattern that will be used to match against the request's host
   (provided via the `:host`) option.
 
-  If `host` is `nil`, a wildcard match (`_`) will be returned. If `host` ends
+  If `host` is `nil`, a wildcard match (`_`) will be returned. If `host` starts
+  with a dot, a match like `_ <> ".host"` will be returned. If `host` ends
   with a dot, a match like `"host." <> _` will be returned.
 
   ## Examples
@@ -58,10 +59,14 @@ defmodule Plug.Router.Utils do
       iex> "api." |> Plug.Router.Utils.build_host_match() |> Macro.to_string()
       "\"api.\" <> _"
 
+      iex> ".example.com" |> Plug.Router.Utils.build_host_match() |> Macro.to_string()
+      "_ <> \".example.com\""
+
   """
   def build_host_match(host) do
     cond do
       is_nil(host) -> quote do: _
+      String.first(host) == "." -> quote do: _ <> unquote(host)
       String.last(host) == "." -> quote do: unquote(host) <> _
       is_binary(host) -> host
     end

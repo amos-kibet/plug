@@ -6,6 +6,10 @@ defmodule Plug.Router.UtilsTest do
 
   @opts [context: Plug.Router.Utils]
 
+  defp build_host_match(host) do
+    R.build_host_match(host)
+  end
+
   defp build_path_match(route) do
     R.build_path_match(route, Plug.Router.Utils)
   end
@@ -98,5 +102,14 @@ defmodule Plug.Router.UtilsTest do
     assert_raise Plug.Router.InvalidSpecError,
                  "globs (*var) cannot be followed by suffixes, got: \"*bar-baz\"",
                  fn -> build_path_match("/foo/*bar-baz") end
+  end
+
+  test "build host match with suffix" do
+    assert quote(@opts, do: _ <> ".abc") == build_host_match(".abc")
+  end
+
+  test "build host match with multiple patterns" do
+    assert ["abc", quote(@opts, do: "abc." <> _), quote(@opts, do: _ <> ".abc")] ==
+             Enum.map(["abc", "abc.", ".abc"], &build_host_match/1)
   end
 end
